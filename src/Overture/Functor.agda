@@ -1,4 +1,4 @@
-module Overture.Functor.Definition where
+module Overture.Functor where
 
 open import Agda.Primitive
 

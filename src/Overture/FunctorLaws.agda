@@ -1,10 +1,10 @@
-module Overture.Functor.Laws where
+module Overture.FunctorLaws where
 
 open import Agda.Primitive
 open import Agda.Builtin.Equality
-open import Overture.Composition
-open import Overture.Functor.Definition
 open import Overture.Identity
+open import Overture.Composition
+open import Overture.Functor
 
 open Functor
 
