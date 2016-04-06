@@ -7,6 +7,7 @@ record Functor
   (F : Set lx → Set ly)
   : Set (lsuc lx ⊔ ly)
   where
+  constructor makeFunctor
   field
     map
       : {A B : Set lx}

@@ -14,6 +14,7 @@ record FunctorLaws
   (F : Functor T)
   : Set (lsuc lx ⊔ ly)
   where
+  constructor makeFunctorLaws
   field
     identity
       : {A : Set lx}
