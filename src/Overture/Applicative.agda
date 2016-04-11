@@ -21,3 +21,6 @@ record Applicative
       → T (A → B)
       → T A
       → T B
+
+  infixl 4 _<*>_
+  _<*>_ = apply

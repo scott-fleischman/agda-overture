@@ -4,6 +4,7 @@ open import Agda.Primitive
 open import Agda.Builtin.Equality
 open import Overture.Identity
 open import Overture.Composition
+open import Overture.Function
 open import Overture.Functor
 open import Overture.FunctorLaws
 open import Overture.Applicative
@@ -93,6 +94,7 @@ applicative = record { ListApplicative }
 
 module ListApplicativeLaws where
   open ListApplicative
+  open ListFunctor
 
   appendEmptyRight
     : {lx : Level}
@@ -102,6 +104,14 @@ module ListApplicativeLaws where
   appendEmptyRight [] = refl
   appendEmptyRight (x ∷ xs) rewrite appendEmptyRight xs = refl
 
+  applyEmptyRight
+    : {lx : Level}
+    → {A B : Set lx}
+    → (xs : List (A → B))
+    → apply xs [] ≡ []
+  applyEmptyRight [] = refl
+  applyEmptyRight (x ∷ xs) rewrite applyEmptyRight xs = refl
+
   identity
     : {lx : Level}
     → {A : Set lx}
@@ -109,6 +119,26 @@ module ListApplicativeLaws where
     → apply (pure id) x ≡ x
   identity [] = refl
   identity (x ∷ xs) rewrite ListFunctorLaws.identity xs | appendEmptyRight xs = refl
+
+  composition
+    : {lx : Level}
+    → {A B C : Set lx}
+    → (tg : List (B → C))
+    → (tf : List (A → B))
+    → (ta : List A)
+    → apply (apply (apply (pure cmp) tg) tf) ta ≡ apply tg (apply tf ta)
+  composition [] tf ta = refl
+  composition {A = A} (g ∷ tg) [] ta
+    rewrite applyEmptyRight tg
+    | applyEmptyRight (apply (pure (cmp {A = A})) tg)
+    = refl
+  composition {A = A} (g ∷ tg) (f ∷ tf) []
+    rewrite applyEmptyRight tf
+    | applyEmptyRight tg
+    | appendEmptyRight (map (cmp {A = A}) tg)
+    | applyEmptyRight (append (map (cmp g) tf) (apply (map cmp tg) (f ∷ tf)))
+    = refl
+  composition (g ∷ tg) (f ∷ tf) (a ∷ ta) = {!!}
 
   homomorphism
     : {lx : Level}
@@ -123,7 +153,7 @@ module ListApplicativeLaws where
     → {A B : Set lx}
     → (f : List (A → B))
     → (x : A)
-    → apply f (pure x) ≡ apply (pure (λ g → g x)) f
+    → apply f (pure x) ≡ apply (pure (ap x)) f
   interchange [] x = refl
   interchange (f ∷ fs) x rewrite interchange fs x = refl
 

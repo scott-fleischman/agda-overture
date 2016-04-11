@@ -4,6 +4,7 @@ open import Agda.Primitive
 open import Agda.Builtin.Equality
 open import Overture.Identity
 open import Overture.Composition
+open import Overture.Function
 open import Overture.Functor
 open import Overture.FunctorLaws
 open import Overture.Applicative
@@ -87,27 +88,43 @@ module MaybeApplicativeLaws where
   identity
     : {lx : Level}
     → {A : Set lx}
-    → (x : Maybe A)
-    → apply (pure id) x ≡ x
-  identity (some x) = refl
+    → (ta : Maybe A)
+    → apply (pure id) ta ≡ ta
+  identity (some a) = refl
   identity none = refl
+
+  composition
+    : {lx : Level}
+    → {A B C : Set lx}
+    → (tg : Maybe (B → C))
+    → (tf : Maybe (A → B))
+    → (ta : Maybe A)
+    → apply (apply (apply (pure cmp) tg) tf) ta ≡ apply tg (apply tf ta)
+  composition (some g) (some f) (some a) = refl
+  composition (some g) (some f) none = refl
+  composition (some g) none (some a) = refl
+  composition (some g) none none = refl
+  composition none (some f) (some a) = refl
+  composition none (some f) none = refl
+  composition none none (some a) = refl
+  composition none none none = refl
 
   homomorphism
     : {lx : Level}
     → {A B : Set lx}
     → (f : A → B)
-    → (x : A)
-    → apply (pure f) (pure x) ≡ pure (f x)
-  homomorphism f x = refl
+    → (a : A)
+    → apply (pure f) (pure a) ≡ pure (f a)
+  homomorphism f a = refl
 
   interchange
     : {lx : Level}
     → {A B : Set lx}
     → (f : Maybe (A → B))
-    → (x : A)
-    → apply f (pure x) ≡ apply (pure (λ g → g x)) f
-  interchange (some f) x = refl
-  interchange none x = refl
+    → (a : A)
+    → apply f (pure a) ≡ apply (pure (ap a)) f
+  interchange (some f) a = refl
+  interchange none a = refl
 
 applicativeLaws
   : {lx : Level}
