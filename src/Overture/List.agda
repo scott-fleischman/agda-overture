@@ -6,6 +6,8 @@ open import Overture.Identity
 open import Overture.Composition
 open import Overture.Functor
 open import Overture.FunctorLaws
+open import Overture.Applicative
+open import Overture.ApplicativeLaws
 
 data List
   {la : Level}
@@ -14,6 +16,15 @@ data List
   where
   [] : List A
   _∷_ : A → List A → List A
+
+append
+  : {lx : Level}
+  → {A : Set lx}
+  → List A
+  → List A
+  → List A
+append [] ys = ys
+append (x ∷ xs) ys = x ∷ (append xs ys)
 
 module ListFunctor where
   map
@@ -24,14 +35,15 @@ module ListFunctor where
     → List B
   map f [] = []
   map f (x ∷ xs) = f x ∷ map f xs
-open ListFunctor
 
 functor
   : {lx : Level}
   → Functor {lx = lx} List
-functor = makeFunctor map
+functor = record { ListFunctor }
 
 module ListFunctorLaws where
+  open ListFunctor
+
   identity
     : {lx : Level}
     → {A : Set lx}
@@ -49,9 +61,73 @@ module ListFunctorLaws where
     → map (g ∘ f) x ≡ (map g ∘ map f) x
   composition g f [] = refl
   composition g f (x ∷ xs) rewrite composition g f xs = refl
-open ListFunctorLaws
 
 functorLaws
   : {lx : Level}
   → FunctorLaws {lx = lx} functor
-functorLaws = makeFunctorLaws identity composition
+functorLaws = record { ListFunctorLaws }
+
+module ListApplicative where
+  open ListFunctor
+
+  pure
+    : {lx : Level}
+    → {A : Set lx}
+    → A
+    → List A
+  pure a = a ∷ []
+
+  apply
+    : {lx : Level}
+    → {A B : Set lx}
+    → List (A → B)
+    → List A
+    → List B
+  apply [] xs = []
+  apply {lx = lx} (f ∷ fs) xs = append (map f xs) (apply fs xs)
+
+applicative
+  : {lx : Level}
+  → Applicative {lx = lx} functor
+applicative = record { ListApplicative }
+
+module ListApplicativeLaws where
+  open ListApplicative
+
+  appendEmptyRight
+    : {lx : Level}
+    → {A : Set lx}
+    → (xs : List A)
+    → append xs [] ≡ xs
+  appendEmptyRight [] = refl
+  appendEmptyRight (x ∷ xs) rewrite appendEmptyRight xs = refl
+
+  identity
+    : {lx : Level}
+    → {A : Set lx}
+    → (x : List A)
+    → apply (pure id) x ≡ x
+  identity [] = refl
+  identity (x ∷ xs) rewrite ListFunctorLaws.identity xs | appendEmptyRight xs = refl
+
+  homomorphism
+    : {lx : Level}
+    → {A B : Set lx}
+    → (f : A → B)
+    → (x : A)
+    → apply (pure f) (pure x) ≡ pure (f x)
+  homomorphism f x = refl
+
+  interchange
+    : {lx : Level}
+    → {A B : Set lx}
+    → (f : List (A → B))
+    → (x : A)
+    → apply f (pure x) ≡ apply (pure (λ g → g x)) f
+  interchange [] x = refl
+  interchange (f ∷ fs) x rewrite interchange fs x = refl
+
+applicativeLaws
+  : {lx : Level}
+  → ApplicativeLaws {lx = lx} applicative
+applicativeLaws = record { ListApplicativeLaws }
